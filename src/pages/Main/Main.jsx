@@ -21,7 +21,51 @@ export default function Main() {
   const [modal, setModal] = useState("");
   const [sortOpen, setSortOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState("기본 정렬순");
+  const [filters, setFilters] = useState({
+    gender: "",
+    color: "",
+    size: "",
+    priceRange: "",
+    type: "",
+  });
   const navigate=useNavigate();
+
+  // 필터 옵션을 누르면 적용/해제
+  const selectOption = (key, value) => {
+    if (filters[key] === value) {
+      setFilters({ ...filters, [key]: "" });
+    } else {
+      setFilters({ ...filters, [key]: value });
+    }
+  };
+
+  // 정렬 옵션을 누르면 적용
+  const selectSort = (sortName) => {
+    setSelectedSort(sortName);
+    setSortOpen(false);
+  };
+
+  // 필터링된 상품 목록
+  let shownItems = items.filter((item) => {
+    if (filters.gender && item.gender !== filters.gender) return false;
+    if (filters.color && item.color !== filters.color) return false;
+    if (filters.size && item.size !== filters.size) return false;
+    if (filters.type && item.type !== filters.type) return false;
+    if (filters.priceRange) {
+      const price = item.price / 10000;
+      if (filters.priceRange === "0~30" && (price < 0 || price > 30)) return false;
+      if (filters.priceRange === "31~60" && (price < 31 || price > 60)) return false;
+      if (filters.priceRange === "61~90" && (price < 61 || price > 90)) return false;
+    }
+    return true;
+  });
+
+  // 정렬
+  if (selectedSort === "평점 높은순") {
+    shownItems = [...shownItems].sort((a, b) => b.rating - a.rating);
+  } else if (selectedSort === "리뷰 많은순") {
+    shownItems = [...shownItems].sort((a, b) => b.review - a.review);
+  }
 
   return (
     <Wrap>
@@ -96,7 +140,7 @@ export default function Main() {
       </Top>
 
       <Grid>
-        {items.map((item) => (
+        {shownItems.map((item) => (
           <Card key={item.id} onClick={()=>navigate(`/item/${item.id}`)}>
             <Img src={item.image} alt={item.name} />
             <Name>{item.name}</Name>
@@ -122,7 +166,13 @@ export default function Main() {
 
             <Btns>
               {options[modal].map((item) => (
-                <Option key={item}>{item}</Option>
+                <Option
+                  key={item}
+                  $active={filters[modal] === item}
+                  onClick={() => selectOption(modal, item)}
+                >
+                  {item}
+                </Option>
               ))}
             </Btns>
           </Modal>
@@ -341,7 +391,7 @@ const Option = styled.button`
   border: none;
   padding: 10px 16px;
   border-radius: 18px;
-  background: #f1f1f1;
+  background: ${({ $active }) => ($active ? "#DFDFDF" : "#f1f1f1")};
   color: #666;
   cursor: pointer;
 `;
