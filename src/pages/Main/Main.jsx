@@ -1,4 +1,4 @@
-import { useState } from "react";
+// import { useState } from "react";
 import styled from "styled-components";
 import img1 from "../../assets/images/Clothes01.png";
 import img2 from "../../assets/images/Clothes02.png";
@@ -6,7 +6,12 @@ import img3 from "../../assets/images/Clothes03.png";
 import img4 from "../../assets/images/Clothes04.png";
 import img5 from "../../assets/images/Clothes05.png";
 import { useNavigate } from "react-router-dom";
-import { items } from "./ItemDummy";
+
+// import { items } from "./ItemDummy";
+
+// import { itemData } from "../../components/Main/itemDummy";
+import { useEffect, useState } from "react";
+import { getItems } from "../../api/shop";
 
 
 const options = {
@@ -20,6 +25,21 @@ const options = {
 export default function Main() {
   const [modal, setModal] = useState("");
   const [sortOpen, setSortOpen] = useState(false);
+  const [ items, setItems ] = useState([]);
+
+  useEffect(() => {
+    let cancelled =false;
+    (async () => {
+      try {
+        const res = await getItems("clothes");
+        if (!cancelled) setItems(Array.isArray(res) ? res : []);
+      } catch {
+        if (!cancelled)setItems([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   const [selectedSort, setSelectedSort] = useState("기본 정렬순");
   const [filters, setFilters] = useState({
     gender: "",
@@ -141,11 +161,21 @@ export default function Main() {
 
       <Grid>
         {shownItems.map((item) => (
+          //Items.map((item) => (
+
           <Card key={item.id} onClick={()=>navigate(`/item/${item.id}`)}>
             <Img src={item.image} alt={item.name} />
             <Name>{item.name}</Name>
             <Price>{item.price.toLocaleString("ko-KR")}원</Price>
-            <Review>리뷰 {item.review}</Review>
+            <Review>리뷰 {item.reviews}</Review>
+            
+
+            {/* key={item.id}
+            itemId={item.id}
+            image={item.image}
+            name={item.name}
+            price={`${Number(item.price).toLocaleString()}원`}
+            reviewCount={item.reviews}  */}
           </Card>
         ))}
       </Grid>
